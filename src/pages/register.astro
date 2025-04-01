@@ -1,0 +1,16 @@
+---
+import { db, Users } from 'astro:db';
+const users_table = await db.select().from(Users);
+---
+<h2>Utilisateurs</h2>
+
+{users_table.length === 0 ? (
+    <p>No users found.</p>
+  ) : (
+    users_table.map(({ username, password }) => (
+      <article>
+        <p>User: {name}</p>
+        <p>Password: {password}</p> <!-- Show only for debugging, remove in production! -->
+      </article>
+    ))
+  )}
