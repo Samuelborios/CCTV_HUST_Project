@@ -9,7 +9,7 @@ const users_table = await db.select().from(Users);
   ) : (
     users_table.map(({ username, password }) => (
       <article>
-        <p>User: {name}</p>
+        <p>User: {username}</p>
         <p>Password: {password}</p> <!-- Show only for debugging, remove in production! -->
       </article>
     ))
