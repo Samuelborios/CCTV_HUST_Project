@@ -1,16 +1,17 @@
 ---
-import { db, Users } from 'astro:db';
-const users_table = await db.select().from(Users);
+import { supabase } from '../lib/supabase';
+
+const { data: users, error } = await supabase.from('Users').select('*');
+
+if (error) {
+  console.error('Erreur lors de la récupération des utilisateurs:', error.message);
+}
 ---
 <h2>Utilisateurs</h2>
 
-{users_table.length === 0 ? (
-    <p>No users found.</p>
-  ) : (
-    users_table.map(({ username, password }) => (
-      <article>
-        <p>User: {username}</p>
-        <p>Password: {password}</p> <!-- Show only for debugging, remove in production! -->
-      </article>
-    ))
-  )}
+{users && users.map(({ username, password }) => (
+  <article>
+    <p>User : {username}</p>
+    <p>Password : {password}</p>
+  </article>
+))}
