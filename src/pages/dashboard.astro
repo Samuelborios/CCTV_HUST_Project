@@ -1,36 +1,45 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+import Layout from "../layouts/Layout.astro";
 import { supabase } from "../lib/supabase";
----
 
-<BaseLayout title="dashboard">
-  <h1 id="welcome-message">Chargement...</h1>
-  <p id="welcome-text">Veuillez patienter...</p>
+const accessToken = Astro.cookies.get("sb-access-token");
+const refreshToken = Astro.cookies.get("sb-refresh-token");
 
-  <script>
-    import { supabase } from "../lib/supabase";
+if (!accessToken || !refreshToken) {
+  return Astro.redirect("/signin");
+}
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      const { data, error } = await supabase.auth.getUser();
-      console.log("Supabase auth response:", data, error);
-
-      if (error || !data?.user) {
-        console.log("Redirection vers /signin...");
-        window.location.href = "/signin";
-      } else {
-        console.log("Utilisateur récupéré:", data.user);
-        const welcomeMessage = document.getElementById("welcome-message");
-        const welcomeText = document.getElementById("welcome-text");
-
-        if (welcomeMessage && welcomeText) {
-          welcomeMessage.innerText = `Bienvenue ${data.user.email}`;
-          welcomeText.innerText = "Nous sommes heureux de vous voir ici.";
-        }
-      }
+let session;
+try {
+  session = await supabase.auth.setSession({
+    refresh_token: refreshToken.value,
+    access_token: accessToken.value,
+  });
+  if (session.error) {
+    Astro.cookies.delete("sb-access-token", {
+      path: "/",
     });
-  </script>
+    Astro.cookies.delete("sb-refresh-token", {
+      path: "/",
+    });
+    return Astro.redirect("/signin");
+  }
+} catch (error) {
+  Astro.cookies.delete("sb-access-token", {
+    path: "/",
+  });
+  Astro.cookies.delete("sb-refresh-token", {
+    path: "/",
+  });
+  return Astro.redirect("/signin");
+}
 
+const email = session.data.user?.email;
+---
+<Layout title="dashboard">
+  <h1>Bienvenue {email}</h1>
+  <p>Nous sommes heureux de vous voir ici.</p>
   <form action="/api/auth/signout">
     <button type="submit">Se déconnecter</button>
   </form>
-</BaseLayout>
+</Layout>
