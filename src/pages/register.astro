@@ -1,17 +1,15 @@
 ---
-import { supabase } from '../lib/supabase';
-
-const { data: users, error } = await supabase.from('Users').select('*');
-
-if (error) {
-  console.error('Erreur lors de la récupération des utilisateurs:', error.message);
-}
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-<h2>Utilisateurs</h2>
 
-{users && users.map(({ username, password }) => (
-  <article>
-    <p>User : {username}</p>
-    <p>Password : {password}</p>
-  </article>
-))}
+<BaseLayout pageTitle=="S'enregistrer">
+  <h1>S'enregistrer</h1>
+  <p>Vous avez déjà un compte ? <a href="/signin">Connexion</a></p>
+  <form action="/api/auth/register" method="post">
+    <label for="email">Email</label>
+    <input type="email" name="email" id="email" />
+    <label for="password">Mot de passe</label>
+    <input type="password" name="password" id="password" />
+    <button type="submit">S'enregistrer</button>
+  </form>
+</BaseLayout>
