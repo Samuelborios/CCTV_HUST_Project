@@ -1,0 +1,5 @@
+[[redirects]]
+  from = "/restreamer/*"
+  to = "http://192.168.50.182:8080/:splat"
+  status = 200
+  force = true
