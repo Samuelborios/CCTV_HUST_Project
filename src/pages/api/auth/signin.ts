@@ -2,11 +2,16 @@
 // export const prerender = false;
 import type { APIRoute } from "astro";
 import { supabase } from "../../../lib/supabase";
+import { URLSearchParams } from "url";  // Import de URLSearchParams pour analyser les données
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
-  const formData = await request.formData();
-  const email = formData.get("email")?.toString();
-  const password = formData.get("password")?.toString();
+  // Analyse les données du formulaire
+  const body = await request.text();
+  console.log("Form data received:", body);  
+  const params = new URLSearchParams(body);
+  
+  const email = params.get("email");
+  const password = params.get("password");
 
   if (!email || !password) {
     return new Response("Email and password are required", { status: 400 });

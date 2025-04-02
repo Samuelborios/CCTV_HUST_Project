@@ -1,5 +1,5 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import { supabase } from "../lib/supabase";
 
 const accessToken = Astro.cookies.get("sb-access-token");
@@ -33,13 +33,29 @@ try {
   });
   return Astro.redirect("/signin");
 }
-
+const {data,error} = await supabase.from('Users').select('*');
 const email = session.data.user?.email;
 ---
-<Layout title="dashboard">
+<BaseLayout title="dashboard">
   <h1>Bienvenue {email}</h1>
   <p>Nous sommes heureux de vous voir ici.</p>
+
+  <!-- Affichage des erreurs si elles existent -->
+  {error && <p>Error: {error}</p>}
+  <!-- Affichage des données -->
+  {data ? (
+    data.map(({ username, password }) => (
+      <article>
+        <p>User: {username}</p>
+        <p>{password}</p>
+      </article>
+    ))): (
+    <p>Pas de données à afficher.</p>
+    )
+  }
+  <iframe src="http://localhost:8080/c669abb9-96fd-4ba7-b0df-cbfe95bfd525.html" width="640" height="360" frameborder="no" scrolling="no" allowfullscreen="true"></iframe>
+    
   <form action="/api/auth/signout">
     <button type="submit">Se déconnecter</button>
   </form>
-</Layout>
+</BaseLayout>

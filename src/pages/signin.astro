@@ -14,7 +14,7 @@ if (accessToken && refreshToken) {
 <BaseLayout title="Connexion">
   <h1>Connexion</h1>
   <p>Nouveau par ici ? <a href="/register">Se créer un compte</a></p>
-  <form action="/api/auth/signin" method="post">
+  <form action="/api/auth/signin" method="post" enctype="application/x-www-form-urlencoded">
     <label for="email">Email</label>
     <input type="email" name="email" id="email" />
     <label for="password">Mot de passe</label>
