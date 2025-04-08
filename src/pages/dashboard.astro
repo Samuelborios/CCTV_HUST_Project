@@ -37,6 +37,7 @@ const {data,error} = await supabase.from('Users').select('*');
 const email = session.data.user?.email;
 ---
 <BaseLayout title="dashboard">
+  
   <h1>Bienvenue </h1>
   <p>Nous sommes heureux de vous voir ici.</p>
 
@@ -53,9 +54,11 @@ const email = session.data.user?.email;
     <p>Pas de données à afficher.</p>
     )
   }
-  <iframe src="https://player.twitch.tv/?channel=amawswe&enableExtensions=true&muted=true&parent=samuelborioscctvsite.netlify.app&player=popout&quality=auto" width="640" height="660" frameborder="no" scrolling="no" allowfullscreen="true"></iframe>
-    
+  <iframe src="https://172.31.62.162:8443/pages/player/all/cam1/0" width="640" height="480" allow="autoplay; fullscreen"></iframe>
+  <!--<iframe src="https://player.twitch.tv/?channel=amawswe&enableExtensions=true&muted=true&parent=samuelborioscctvsite.netlify.app&player=popout&quality=auto" width="640" height="660" frameborder="no" scrolling="no" allowfullscreen="true"></iframe>
+-->
   <form action="/api/auth/signout">
     <button type="submit">Se déconnecter</button>
   </form>
 </BaseLayout>
+
