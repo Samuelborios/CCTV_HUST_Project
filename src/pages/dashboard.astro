@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { supabase } from "../lib/supabase";
+import vidplayer from '../components/vidplayer.astro';
 
 const accessToken = Astro.cookies.get("sb-access-token");
 const refreshToken = Astro.cookies.get("sb-refresh-token");
@@ -54,8 +55,40 @@ const email = session.data.user?.email;
     <p>Pas de données à afficher.</p>
     )
   }
-  <iframe src="https://192.168.50.182:443/pages/player/all/cam1/0" width="640" height="480" allow="autoplay; fullscreen"></iframe>
-  <!--<iframe src="https://player.twitch.tv/?channel=amawswe&enableExtensions=true&muted=true&parent=samuelborioscctvsite.netlify.app&player=popout&quality=auto" width="640" height="660" frameborder="no" scrolling="no" allowfullscreen="true"></iframe>
+  <video id="video" autoplay muted controls width="640" height="360" style="background: black;"></video>
+
+  <script type="module">
+    const video = document.getElementById('video');
+    const mediaSource = new MediaSource();
+    video.src = URL.createObjectURL(mediaSource);
+  
+    const wsUrl = 'wss://192.168.50.182/stream/0c82d955-bf64-4934-9a6f-7f72f3061816/channel/0/mse?uuid=0c82d955-bf64-4934-9a6f-7f72f3061816&channel=0';
+  
+    mediaSource.addEventListener('sourceopen', () => {
+      const mime = 'video/mp2t; codecs="avc1.42E01E, mp4a.40.2"'; // might vary
+      const sourceBuffer = mediaSource.addSourceBuffer(mime);
+      const socket = new WebSocket(wsUrl);
+  
+      socket.binaryType = 'arraybuffer';
+  
+      socket.onmessage = (event) => {
+        if (sourceBuffer.updating || mediaSource.readyState !== 'open') return;
+        try {
+          sourceBuffer.appendBuffer(new Uint8Array(event.data));
+        } catch (e) {
+          console.error("Error appending buffer", e);
+        }
+      };
+  
+      socket.onclose = () => console.warn('Socket closed');
+      socket.onerror = (err) => console.error('Socket error', err);
+    });
+  </script>
+  
+  <!-- <vidplayer streamUrl="https://192.168.50.182:443/pages/player/hls/0c82d955-bf64-4934-9a6f-7f72f3061816/0/hls/live/index.m3u8" />
+  
+  <iframe src="https://192.168.50.182:443/pages/player/all/cam1/0" width="1200" height="900" allow="autoplay; fullscreen"></iframe>
+  <iframe src="https://player.twitch.tv/?channel=amawswe&enableExtensions=true&muted=true&parent=samuelborioscctvsite.netlify.app&player=popout&quality=auto" width="640" height="660" frameborder="no" scrolling="no" allowfullscreen="true"></iframe>
 -->
   <form action="/api/auth/signout">
     <button type="submit">Se déconnecter</button>
