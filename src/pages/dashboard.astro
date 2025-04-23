@@ -1,46 +1,69 @@
-<video id="video" autoplay controls muted></video>
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { supabase } from "../lib/supabase";
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const video = document.getElementById("video");
-    if (!(video instanceof HTMLVideoElement)) {
-      console.error("Video element not found or incorrect type");
-      return;
-    }
+const accessToken = Astro.cookies.get("sb-access-token");
+const refreshToken = Astro.cookies.get("sb-refresh-token");
 
-    const mse = new MediaSource();
-    video.src = URL.createObjectURL(mse);
+if (!accessToken || !refreshToken) {
+  return Astro.redirect("/signin");
+}
 
-    mse.addEventListener("sourceopen", () => {
-      const mimeCodec = 'video/mp4; codecs="avc1.64001f"';
-      const sourceBuffer = mse.addSourceBuffer(mimeCodec);
-
-      let queue: ArrayBuffer[] = [];
-
-
-      
-
-      const ws = new WebSocket("wss://192.168.50.182/stream/0c82d955-bf64-4934-9a6f-7f72f3061816/channel/0/mse?uuid=0c82d955-bf64-4934-9a6f-7f72f3061816&channel=0");
-      ws.binaryType = "arraybuffer";
-
-      ws.onmessage = (event) => {
-        if (sourceBuffer.updating || queue.length > 0) {
-          queue.push(event.data);
-        } else {
-          sourceBuffer.appendBuffer(event.data);
-        }
-      };
-
-      sourceBuffer.addEventListener("updateend", () => {
-        if (queue.length > 0 && !sourceBuffer.updating) {
-          const next = queue.shift();
-          if (next) sourceBuffer.appendBuffer(next);
-        }
-      });
-
-      ws.onopen = () => console.log("WebSocket connected");
-      ws.onerror = (err) => console.error("WebSocket error:", err);
-      ws.onclose = () => console.log("WebSocket closed");
-    });
+let session;
+try {
+  session = await supabase.auth.setSession({
+    refresh_token: refreshToken.value,
+    access_token: accessToken.value,
   });
-</script>
+  if (session.error) {
+    Astro.cookies.delete("sb-access-token", {
+      path: "/",
+    });
+    Astro.cookies.delete("sb-refresh-token", {
+      path: "/",
+    });
+    return Astro.redirect("/signin");
+  }
+} catch (error) {
+  Astro.cookies.delete("sb-access-token", {
+    path: "/",
+  });
+  Astro.cookies.delete("sb-refresh-token", {
+    path: "/",
+  });
+  return Astro.redirect("/signin");
+}
+const {data,error} = await supabase.from('Users').select('*');
+const email = session.data.user?.email;
+---
+<BaseLayout title="dashboard">
+  
+  <h1>Bienvenue </h1>
+  <p>Nous sommes heureux de vous voir ici.</p>
+
+  <!-- Affichage des erreurs si elles existent -->
+  {error && <p>Error: {error}</p>}
+  <!-- Affichage des données -->
+  {data ? (
+    data.map(({ username, password }) => (
+      <article>
+        <p>User: {username}</p>
+        <p>{password}</p>
+      </article>
+    ))): (
+    <p>Pas de données à afficher.</p>
+    )
+  }
+
+  <video controls autoplay>
+    <source src="/video/output.mp4" type="video/mp4">
+  </video>
+
+  <!--  
+  <iframe src="https://192.168.50.182:443/pages/player/all/cam1/0" width="1200" height="900" allow="autoplay; fullscreen"></iframe>
+  <iframe src="https://player.twitch.tv/?channel=amawswe&enableExtensions=true&muted=true&parent=samuelborioscctvsite.netlify.app&player=popout&quality=auto" width="640" height="660" frameborder="no" scrolling="no" allowfullscreen="true"></iframe>
+  -->
+  <form action="/api/auth/signout">
+    <button type="submit">Se déconnecter</button>
+  </form>
+</BaseLayout>
