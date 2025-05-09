@@ -54,13 +54,118 @@ const email = session.data.user?.email;
     <p>Pas de données à afficher.</p>
     )
   }
+  <video id="video" autoplay muted controls playsinline style="width: 100%; height: auto;"></video>
 
-  <video controls autoplay>
-    <source src="/video/output.mp4" type="video/mp4">
-  </video>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const video = document.getElementById("video");
+      if (!(video instanceof HTMLVideoElement)) {
+        console.error("Video element not found or incorrect type");
+        return;
+      }
+  
+      const mse = new MediaSource();
+      video.src = URL.createObjectURL(mse);
+      video.onerror = () => {
+        console.error("Video error:", video.error);
+      };
+  
+      mse.addEventListener("sourceopen", () => {
+        //console.log("MediaSource opened, readyState:", mse.readyState);
+        const mimeCodec = 'video/mp4; codecs="avc1.640033"';
+        
+        if (!MediaSource.isTypeSupported(mimeCodec)) {
+          console.error("Unsupported MIME type or codec:", mimeCodec);
+          return;
+        }
+        
+        const sourceBuffer = mse.addSourceBuffer(mimeCodec);
+        let queue: ArrayBuffer[] = [];
+  
+        const ws = new WebSocket("wss://192.168.50.182/stream/0c82d955-bf64-4934-9a6f-7f72f3061816/channel/0/mse?uuid=0c82d955-bf64-4934-9a6f-7f72f3061816&channel=0");
+        ws.binaryType = "arraybuffer";
+  
+        ws.onmessage = (event) => {
+          //console.log("Incoming data chunk of size:", event.data.byteLength);
+          
+          if (event.data.byteLength < 100) {
+            console.warn("Skipping small chunk of size:", event.data.byteLength);
+            return;
+          }
+          
+          /*
+          if (queue.length === 0 && !sourceBuffer.updating) {
+            console.log("First chunk received:", new Uint8Array(event.data).slice(0, 20));
+          }*/
+  
+          if (sourceBuffer.updating || queue.length > 0) {
+            queue.push(event.data);
+            //console.log("Data added to queue, queue size:", queue.length);
+          } else {
+            try {
+              sourceBuffer.appendBuffer(event.data);
+              //console.log("Appending chunk of size", event.data.byteLength);
+            } catch (e) {
+              console.error("appendBuffer failed", e);
+            }
+          }
+        };
+  
+        sourceBuffer.addEventListener("updateend", () => {
+          //console.log("SourceBuffer updated, queue size:", queue.length);
+  
+          if (queue.length > 0 && !sourceBuffer.updating) {
+            const next = queue.shift();
+            if (next) {
+              try {
+                sourceBuffer.appendBuffer(next);
+                //console.log("Appending next chunk from queue, queue size:", queue.length);
+              } catch (e) {
+                console.error("appendBuffer failed while processing queue", e);
+              }
+            }
+          }
+  
+          if (video.readyState >= 3) { // HAVE_FUTURE_DATA
+            video.play().catch(e => console.warn("Playback error:", e));
+          }
+        });
+  
+        sourceBuffer.addEventListener("error", (e) => {
+          console.error("SourceBuffer error:", e);
+        });
+  
+        ws.onopen = () => console.log("WebSocket connected");
+        ws.onerror = (err) => console.error("WebSocket error:", err);
+        ws.onclose = () => console.log("WebSocket closed");
+  
+        /*
+        video.addEventListener("playing", () => {
+          console.log("Video is playing.");
+        });
+        video.addEventListener("waiting", () => {
+          console.log("Video is waiting for more data.");
+        });
+  
+        setInterval(() => {
+          console.log("Current MediaSource readyState:", mse.readyState);
+          console.log("Video readyState:", video.readyState);
+          if (video.buffered.length > 0) {
+            console.log("Buffered ranges:", video.buffered.start(0), "-", video.buffered.end(0));
+          } else {
+            console.log("No buffered ranges yet.");
+          }
+        }, 1000);*/
+      });
+    });
+  </script>
+  
 
   <!--  
   <iframe src="https://192.168.50.182:443/pages/player/all/cam1/0" width="1200" height="900" allow="autoplay; fullscreen"></iframe>
+  <video controls autoplay>
+    <source src="/video/output.mp4" type="video/mp4">
+  </video>
   <iframe src="https://player.twitch.tv/?channel=amawswe&enableExtensions=true&muted=true&parent=samuelborioscctvsite.netlify.app&player=popout&quality=auto" width="640" height="660" frameborder="no" scrolling="no" allowfullscreen="true"></iframe>
   -->
   <form action="/api/auth/signout">

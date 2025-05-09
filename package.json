@@ -11,7 +11,13 @@
   "dependencies": {
     "@astrojs/db": "^0.14.10",
     "@astrojs/netlify": "^6.2.5",
+    "@mux/mux-player": "^3.3.4",
     "@supabase/supabase-js": "^2.49.4",
-    "astro": "^5.5.5"
+    "astro": "^5.5.5",
+    "hls.js": "^1.6.2",
+    "onvif": "^0.8.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "video.js": "^8.22.0"
   }
 }
