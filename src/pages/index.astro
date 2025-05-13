@@ -1,7 +1,27 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-const pageTitle = "Home Page";
+import '../styles/global.css';
+
+const { cookies, redirect } = Astro;
+
+const accessToken = cookies.get("sb-access-token");
+const refreshToken = cookies.get("sb-refresh-token");
+
+if (accessToken && refreshToken) {
+  return redirect("/dashboard");
+}
 ---
-<BaseLayout pageTitle={pageTitle}>
-  <h2>My awesome blog subtitle</h2>
-</BaseLayout>
+
+<div class="login-wrapper">
+  <div class="login-card">
+    <h1>SOICT-HUST<br />CCTV Monitoring</h1>
+    <form action="/api/auth/signin" method="post" enctype="application/x-www-form-urlencoded">
+      <label for="email">Email</label>
+      <input type="email" name="email" id="email" autocomplete="email" required />
+      
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" required />
+      
+      <button type="submit">Log in</button>
+    </form>
+  </div>
+</div>

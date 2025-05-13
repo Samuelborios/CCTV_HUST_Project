@@ -6,7 +6,7 @@ html {
 body {
     margin: 0 auto;
     width: 100%;
-    max-width: 80ch;
+    max-width: 120ch;
     padding: 1rem;
     line-height: 1.5;
 }
@@ -20,7 +20,83 @@ h1 {
     font-size: 2.5rem;
 }
 
-/* nav styles */
+.login-wrapper {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  background-color: white;
+  padding: 2rem 3rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 60ch;
+  min-height: 60ch;
+}
+
+.login-card h1 {
+  text-align: center;
+  border-radius: 1rem;
+  margin-bottom: 4rem;
+  background-color:#bed4ea;
+}
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-card label {
+  margin-top: 0.5rem;
+  font-weight: bold;
+}
+
+.login-card input {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+}
+
+.login-card button {
+  margin-top: 1.5rem;
+  padding: 0.75rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-card button:hover {
+  background-color: #2563eb;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #333;
+    color: #fff;
+    padding: 0.75em 1.2em;
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 9999;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.toast.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .hamburger {
     padding-right: 20px;
     cursor: pointer;
@@ -38,12 +114,13 @@ h1 {
     width: 100%;
     top: 5rem;
     left: 48px;
-    background-color: #ff9776;
+    background-color: #000000;
     display: none;
     margin: 0;
 }
 
 .nav-links a {
+    color: rgb(61, 10, 109);
     display: block;
     text-align: center;
     padding: 10px 0;
@@ -56,8 +133,10 @@ h1 {
 .nav-links a:hover,
 .nav-links a:focus {
     background-color: #ccd6e0;
+} 
+.nav-links a:visited{
+    color: rgb(61, 10, 109);
 }
-
 .expanded {
     display: unset;
 }

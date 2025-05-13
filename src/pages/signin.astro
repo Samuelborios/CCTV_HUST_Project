@@ -1,5 +1,5 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+import '../styles/global.css';
 
 const { cookies, redirect } = Astro;
 
@@ -11,14 +11,17 @@ if (accessToken && refreshToken) {
 }
 ---
 
-<BaseLayout title="Connexion">
-  <h1>Connexion</h1>
-  <p>Nouveau par ici ? <a href="/register">Se créer un compte</a></p>
-  <form action="/api/auth/signin" method="post" enctype="application/x-www-form-urlencoded">
-    <label for="email">Email</label>
-    <input type="email" name="email" id="email" />
-    <label for="password">Mot de passe</label>
-    <input type="password" name="password" id="password" />
-    <button type="submit">Se connecter</button>
-  </form>
-</BaseLayout>
+<div class="login-wrapper">
+  <div class="login-card">
+    <h1>SOICT-HUST ~ CCTV Monitoring</h1>
+    <form action="/api/auth/signin" method="post" enctype="application/x-www-form-urlencoded">
+      <label for="email">Email</label>
+      <input type="email" name="email" id="email" required />
+      
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" required />
+      
+      <button type="submit">Log in</button>
+    </form>
+  </div>
+</div>
