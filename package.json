@@ -11,8 +11,11 @@
   "dependencies": {
     "@astrojs/db": "^0.14.10",
     "@astrojs/netlify": "^6.2.5",
+    "@astrojs/react": "^4.2.7",
     "@mux/mux-player": "^3.3.4",
     "@supabase/supabase-js": "^2.49.4",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
     "astro": "^5.5.5",
     "digest-fetch": "^3.1.1",
     "hls.js": "^1.6.2",

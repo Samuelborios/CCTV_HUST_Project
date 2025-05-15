@@ -6,7 +6,8 @@ html {
 body {
     margin: 0 auto;
     width: 100%;
-    max-width: 120ch;
+    min-width: 50ch;
+    max-width: 90ch;
     padding: 1rem;
     line-height: 1.5;
 }
@@ -16,8 +17,80 @@ body {
 }
 
 h1 {
-    margin: 1rem 0;
-    font-size: 2.5rem;
+  margin: 2rem 0;
+  font-size: 1.75rem;
+  background-color:#dfeeff;
+  text-align: center;
+  border-radius: 1rem;
+  padding: 1rem;
+  outline: 3px solid #bdc9d7;
+}
+
+.input-line {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.align-right {
+  margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.my-input {
+  margin: 0.5rem 1rem 0.5rem 0;
+  padding: 0.2rem;
+  border-radius: 0.3rem;
+  border: 1px solid #727272;
+}
+
+.my-select {
+  margin: 0.5rem 1rem 0.5rem 0;
+  padding: 0.2rem;
+  border-radius: 0.3rem;
+  border: 1px solid #727272;
+}
+
+.button-add {
+  margin: 0.2rem 0.5rem;
+  min-height: 3ch;
+  padding: 0.3rem 1rem;
+  background-color: #939cab;
+  outline: 2px solid #454545;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  font-size: 1.7ch;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button-del {
+  margin: 0.2rem 0.5rem;
+  min-height: 3ch;
+  padding: 0.3rem 1rem;
+  background-color: #782828;
+  outline: 2px solid #6a2525;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  font-size: 1.7ch;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button-add:hover {
+  background-color: #656974;
 }
 
 .login-wrapper {
@@ -41,7 +114,9 @@ h1 {
   text-align: center;
   border-radius: 1rem;
   margin-bottom: 4rem;
-  background-color:#bed4ea;
+  background-color:#dfeeff;
+  outline: 3px solid #bdc9d7;
+  font-family: 'Trebuchet MS';
 }
 
 .login-card form {
@@ -62,13 +137,14 @@ h1 {
 }
 
 .login-card button {
-  margin-top: 1.5rem;
-  padding: 0.75rem;
+  margin-top: 3rem;
+  min-height: 5ch;
   background-color: #3b82f6;
   color: white;
   border: none;
   border-radius: 0.5rem;
   font-weight: bold;
+  font-size: 2ch;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -92,6 +168,7 @@ h1 {
     font-size: 0.9rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
+
 .toast.show {
     opacity: 1;
     pointer-events: auto;
@@ -100,14 +177,16 @@ h1 {
 .hamburger {
     padding-right: 20px;
     cursor: pointer;
+    margin: 15px 0 41px 0;
 }
 
 .hamburger .line {
     display: block;
+    border-radius: 0.2rem;
     width: 40px;
     height: 5px;
     margin-bottom: 10px;
-    background-color: #7d8388;
+    background-color: rgb(61, 10, 109);
 }
 
 .nav-links {
@@ -133,6 +212,9 @@ h1 {
 .nav-links a:hover,
 .nav-links a:focus {
     background-color: #ccd6e0;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 } 
 .nav-links a:visited{
     color: rgb(61, 10, 109);
@@ -141,7 +223,7 @@ h1 {
     display: unset;
 }
 
-@media screen and (min-width: 636px) {
+@media screen and (min-width: 100ch) {
     .nav-links {
         margin-left: 5em;
         display: block;

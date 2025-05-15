@@ -1,6 +1,5 @@
 ---
 import '../styles/global.css';
-
 const { cookies, redirect } = Astro;
 
 const accessToken = cookies.get("sb-access-token");
@@ -10,13 +9,28 @@ if (accessToken && refreshToken) {
   return redirect("/dashboard");
 }
 ---
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const emailInput = document.querySelector('#email') as HTMLInputElement | null;
+    if (!emailInput) return;
+
+    const saved = localStorage.getItem('last-email');
+    if (saved) {
+      emailInput.value = saved;
+    }
+
+    emailInput.addEventListener('input', () => {
+      localStorage.setItem('last-email', emailInput.value);
+    });
+  });
+</script>
 
 <div class="login-wrapper">
   <div class="login-card">
     <h1>SOICT-HUST<br />CCTV Monitoring</h1>
     <form action="/api/auth/signin" method="post" enctype="application/x-www-form-urlencoded">
       <label for="email">Email</label>
-      <input type="email" name="email" id="email" autocomplete="email" required />
+      <input type="email" name="email" id="email" required />
       
       <label for="password">Password</label>
       <input type="password" name="password" id="password" required />

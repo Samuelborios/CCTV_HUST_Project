@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { supabase } from "../lib/supabase";
-import DigestFetch from 'digest-fetch';
 
 const accessToken = Astro.cookies.get("sb-access-token");
 const refreshToken = Astro.cookies.get("sb-refresh-token");
@@ -26,32 +25,48 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
 
 ---
 
-<BaseLayout title="Gestion des utilisateurs Dahua">
-  <h1>Dahua users management</h1>
+<BaseLayout>
+  <h1>Manage Dahua users</h1>
 
-  <form id="add-user-form">
-    <label>Username:</label>
-    <input name="username" required />
+  <h2>Existing users</h2>
+  <ul id="user-list" style="list-style: none; padding-left: 0;"></ul>
 
-    <label>Password:</label>
-    <input type="password" name="password" required />
+  <h2>Would you like to add another user ?</h2>
+  
+  <form id="add-user-form" class="input-line">
 
-    <label>Group:</label>
-    <select name="group">
-      <option value="user">user</option>
-      <option value="admin">admin</option>
-    </select>
+    <div class="input-group">
+      <label>Group</label>
+      <select name="group" class="my-select">
+        <option value="user">user</option>
+        <option value="admin">admin</option>
+      </select>
+    </div>
 
-    <label>Memo (optional):</label>
-    <input name="memo" />
+    <div class="input-group">
+      <label for="memo">Memo (optional)</label>
+      <input name="memo" class="my-input" />
+    </div>
 
-    <button type="submit">Add user</button>
+    <div class="input-line">
+      <div class="input-group">
+        <label>Username</label>
+        <input name="username" class="my-input" required />
+      </div>
+
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" name="password" class="my-input" required />
+      </div>
+    </div>
+
+    
+    <div class="align-right">
+      <button type="submit" class="button-add">Add user</button>
+    </div>
   </form>
 
-  <p id="response-msg" style="margin-top: 10px;"></p>
-
-  <h3>Existing users</h3>
-  <ul id="user-list" style="list-style: none; padding-left: 0;"></ul>
+  
 
   <script type="module">
 
@@ -111,7 +126,7 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
         details.innerHTML = `
           <p>Groupe: ${user.group || '-'}</p>
           <p>Memo: ${user.memo || '-'}</p>
-          <button style=submit>Delete</button>
+          <button style=submit class=button-del>Delete</button>
         `;
 
         summary.addEventListener('click', () => {
