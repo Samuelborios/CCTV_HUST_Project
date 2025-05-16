@@ -17,7 +17,7 @@ body {
 }
 
 h1 {
-  margin: 2rem 0;
+  margin: 0;
   font-size: 1.75rem;
   background-color:#dfeeff;
   text-align: center;
@@ -46,14 +46,14 @@ h1 {
 }
 
 .my-input {
-  margin: 0.5rem 1rem 0.5rem 0;
+  margin: 0.5rem 2rem 0.5rem 0;
   padding: 0.2rem;
   border-radius: 0.3rem;
   border: 1px solid #727272;
 }
 
 .my-select {
-  margin: 0.5rem 1rem 0.5rem 0;
+  margin: 0.5rem 2rem 0.5rem 0;
   padding: 0.2rem;
   border-radius: 0.3rem;
   border: 1px solid #727272;
@@ -63,7 +63,7 @@ h1 {
   margin: 0.2rem 0.5rem;
   min-height: 3ch;
   padding: 0.3rem 1rem;
-  background-color: #939cab;
+  background-color: #5d7cae;
   outline: 2px solid #454545;
   color: white;
   border: none;
@@ -74,12 +74,16 @@ h1 {
   transition: background-color 0.3s ease;
 }
 
+.button-add:hover {
+  background-color: #3c4c78;
+}
+
 .button-del {
   margin: 0.2rem 0.5rem;
   min-height: 3ch;
   padding: 0.3rem 1rem;
-  background-color: #782828;
-  outline: 2px solid #6a2525;
+  background-color: #eb4b4b;
+  outline: 2px solid #751c1c;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -89,8 +93,27 @@ h1 {
   transition: background-color 0.3s ease;
 }
 
-.button-add:hover {
-  background-color: #656974;
+.button-del:hover {
+  background-color: #a43232;
+}
+
+.outline {
+  margin: 0.2rem 0.5rem;
+  min-height: 3ch;
+  padding: 0.1rem 1rem;
+  background-color: #e7eaed;
+  outline: 2px solid #a3a3a3;
+  color: black;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  font-size: 1.7ch;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.outline:hover {
+  background-color: #d8dce0;
 }
 
 .login-wrapper {
@@ -177,7 +200,7 @@ h1 {
 .hamburger {
     padding-right: 20px;
     cursor: pointer;
-    margin: 15px 0 41px 0;
+    margin: 15px 0 28px 0;
 }
 
 .hamburger .line {
@@ -195,13 +218,14 @@ h1 {
     left: 48px;
     background-color: #000000;
     display: none;
-    margin: 0;
+    margin: 1rem;
 }
 
 .nav-links a {
     color: rgb(61, 10, 109);
     display: block;
     text-align: center;
+    line-height: 1rem;
     padding: 10px 0;
     text-decoration: none;
     font-size: 1.2rem;
@@ -225,7 +249,7 @@ h1 {
 
 @media screen and (min-width: 100ch) {
     .nav-links {
-        margin-left: 5em;
+        margin-left: 5rem;
         display: block;
         position: static;
         width: auto;

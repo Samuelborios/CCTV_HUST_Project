@@ -28,19 +28,18 @@ try {
     path: "/",
   });
   return Astro.redirect("/");
-}
-const {data,error} = await supabase.from('Users').select('*');
+ }
+// const {data: test_users, error} = await supabase.from('Users').select('*');
 ---
-<BaseLayout title="dashboard">
+<BaseLayout>
   
-  <h1>Bienvenue </h1>
-  <p>Nous sommes heureux de vous voir ici.</p>
+  <h1>Dashboard </h1>
 
-  <!-- Affichage des erreurs si elles existent -->
+  <!--
   {error && <p>Error: {error}</p>}
-  <!-- Affichage des données -->
-  {data ? (
-    data.map(({ username, password }) => (
+
+  {test_users ? (
+    test_users.map(({ username, password }) => (
       <article>
         <p>User: {username}</p>
         <p>{password}</p>
@@ -48,7 +47,53 @@ const {data,error} = await supabase.from('Users').select('*');
     ))): (
     <p>Pas de données à afficher.</p>
     )
-  }
+  } -->
+  <br>
+  <form id="scan-form">
+    <div class="input-line">
+      <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="username" value="admin" class="my-input" required>
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="password" value="Bkcs@123" class="my-input" required>
+      </div>
+    </div>
+    
+    <div class="align-right">
+      <button type="submit" class="outline">Scan Cameras</button>
+    </div>
+  </form>
+
+  <pre id="output">Scan results will appear here...</pre>
+
+  <script type="module">
+    document.getElementById('scan-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const output = document.getElementById('output');
+
+      output.textContent = 'Scanning...';
+
+      try {
+        const res = await fetch('/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+
+        output.textContent = JSON.stringify(data.cameras, null, 2);
+      } catch (err) {
+        output.textContent = 'Error during scan. Check console.';
+      }
+    });
+  </script>
+
+
+
   <video id="video" autoplay muted controls playsinline style="width: 100%; height: auto;"></video>
 
   <script>

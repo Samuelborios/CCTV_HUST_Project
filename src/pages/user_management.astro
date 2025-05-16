@@ -116,6 +116,7 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
         const nameSpan = document.createElement('span');
         nameSpan.textContent = user.name;
         nameSpan.style.fontWeight = 'bold';
+        nameSpan.classList.add('outline');
 
         summary.appendChild(arrow);
         summary.appendChild(nameSpan);
@@ -124,9 +125,13 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
         details.style.display = 'none';
         details.style.paddingLeft = '1em';
         details.innerHTML = `
-          <p>Groupe: ${user.group || '-'}</p>
-          <p>Memo: ${user.memo || '-'}</p>
-          <button style=submit class=button-del>Delete</button>
+          <div class="input-group">
+            <p><strong>Group: </strong>${user.group || '-'}</p>
+            <p><strong>Memo: </strong>${user.memo || '-'}</p>
+            <div class="align-right">
+              <button style=submit class=button-del>Delete</button>
+            </div>
+          </div>
         `;
 
         summary.addEventListener('click', () => {
