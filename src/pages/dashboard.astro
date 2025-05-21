@@ -29,11 +29,14 @@ try {
   });
   return Astro.redirect("/");
  }
-// const {data: test_users, error} = await supabase.from('Users').select('*');
+const {data, error} = await supabase.from('cameras').select('*');
 ---
 <BaseLayout>
   
   <h1>Dashboard </h1>
+
+  <h2>Cameras</h2>
+  <ul id="cam-list" style="list-style: none; padding-left: 0;"></ul>
 
   <!--
   {error && <p>Error: {error}</p>}
@@ -49,6 +52,7 @@ try {
     )
   } -->
   <br>
+  <h2>Scan active cameras</h2>
   <form id="scan-form">
     <div class="input-line">
       <div class="input-group">
@@ -59,16 +63,104 @@ try {
         <label>Password</label>
         <input type="password" id="password" value="Bkcs@123" class="my-input" required>
       </div>
+      
+      <div class="align-right">
+        <div class="input-group">
+          <button type="submit" class="outline">Scan Cameras</button>
+        </div>
+      </div>
     </div>
     
-    <div class="align-right">
-      <button type="submit" class="outline">Scan Cameras</button>
-    </div>
-  </form>
 
-  <pre id="output">Scan results will appear here...</pre>
+  </form> 
+
+  <h5 id="output">Results will appear here... </h5> 
+
+
 
   <script type="module">
+
+    async function fetchCameras(recentScanResults = []) {
+      const res = await fetch('/api/list-camDB');
+      const data = await res.json();
+
+      const list = document.getElementById('cam-list');
+      list.innerHTML = '';
+
+      if (data.error) {
+        list.innerHTML = '<li style="color: red;">Fetching error</li>';
+        return;
+      }
+
+      if (!data.cameras || data.cameras.length === 0) {
+        list.innerHTML = '<li>No cameras found</li>';
+        return;
+      }
+
+      data.cameras.forEach(camera => {
+        const li = document.createElement('li');
+        li.style.marginBottom = '1em';
+        li.style.cursor = 'pointer';
+
+        const summary = document.createElement('div');
+        summary.style.fontWeight = 'bold';
+        summary.style.display = 'flex';
+        summary.style.alignItems = 'center';
+        summary.style.gap = '0.5em';
+
+        const arrow = document.createElement('span');
+        arrow.textContent = '▼';
+
+        const status = document.createElement('span');
+
+        const ipSpan = document.createElement('test');
+        ipSpan.textContent = camera.ip;
+        ipSpan.style.padding = '0.15rem 1rem';
+
+        const isActive = recentScanResults.some(scan => scan.ip === camera.ip && scan.info?.serialNumber === camera.serial);
+        if (isActive) {
+          ipSpan.classList.add('active-outline');
+          status.textContent = 'Connected'
+        } else {
+          ipSpan.classList.add('outline');
+          status.textContent = 'Previously connected'
+        }        
+
+        summary.appendChild(arrow);
+        summary.appendChild(ipSpan);
+        summary.appendChild(status);
+
+        const details = document.createElement('div');
+        details.style.display = 'none';
+        details.style.paddingLeft = '1em';
+        details.innerHTML = `
+          <div class="input-line">
+            <div class="input-group">
+              <p><strong>Port:</strong> ${camera.port || '-'}</p>
+              <p><strong>Model:</strong> ${camera.model || '-'}</p>
+              <p><strong>Manufacturer:</strong> ${camera.manufacturer || '-'}</p>
+            </div>
+            <div class="input-group">
+              <p><strong>Firmware:</strong> ${camera.firmware || '-'}</p>
+              <p><strong>Serial:</strong> ${camera.serial || '-'}</p>
+            </div>
+          </div>
+        `;
+
+        summary.addEventListener('click', () => {
+          const isOpen = details.style.display === 'block';
+          details.style.display = isOpen ? 'none' : 'block';
+          arrow.textContent = isOpen ? '▼' : '▲';
+        });
+
+        li.appendChild(summary);
+        li.appendChild(details);
+        list.appendChild(li);
+      });
+    }
+
+    
+
     document.getElementById('scan-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('username').value;
@@ -78,23 +170,29 @@ try {
       output.textContent = 'Scanning...';
 
       try {
-        const res = await fetch('/api/scan', {
+        const resScan = await fetch('/api/scan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
         });
-        const data = await res.json();
+        const data = await resScan.json();
 
-        output.textContent = JSON.stringify(data.cameras, null, 2);
+        await fetchCameras(data.cameras);
+
+        output.textContent = 'Scan finished OK';
+        // output.textContent = JSON.stringify(data.cameras, null, 2);
       } catch (err) {
         output.textContent = 'Error during scan. Check console.';
+        console.log(err);
       }
     });
+
+    fetchCameras();
   </script>
 
 
 
-  <video id="video" autoplay muted controls playsinline style="width: 100%; height: auto;"></video>
+<!--   <video id="video" autoplay muted controls playsinline style="width: 100%; height: auto;"></video> -->
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -200,7 +298,6 @@ try {
     });
   </script>
   
-
   <!--  
   <iframe src="https://192.168.50.182:443/pages/player/all/cam1/0" width="1200" height="900" allow="autoplay; fullscreen"></iframe>
   <video controls autoplay>
@@ -208,7 +305,5 @@ try {
   </video>
   <iframe src="https://player.twitch.tv/?channel=amawswe&enableExtensions=true&muted=true&parent=samuelborioscctvsite.netlify.app&player=popout&quality=auto" width="640" height="660" frameborder="no" scrolling="no" allowfullscreen="true"></iframe>
   -->
-  <form action="/api/auth/signout">
-    <button type="submit">Se déconnecter</button>
-  </form>
+
 </BaseLayout>

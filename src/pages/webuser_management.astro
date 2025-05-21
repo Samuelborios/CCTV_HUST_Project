@@ -16,23 +16,34 @@ const email = user?.user?.email;
   )}
 
   <h2>Would you like to add another user ?</h2>
-  <form id=add-web-user action="/api/auth/add-web-user" method="post" class="input-line">
-
+  <div class="input-line">
     <div class="input-group">
-      <label for="email">Email</label>
-      <input type="email" name="email" id="email" class="my-input" required />
+      <label>Group</label>
+      <select name="group" class="my-select">
+        <option value="user">user</option>
+        <option value="admin">admin</option>
+      </select>
     </div>
+    <form id=add-web-user action="/api/auth/add-web-user" method="post" class="input-line">
 
-    <div class="input-group">
-      <label for="password">Password</label>
-      <input type="password" name="password" id="password" class="my-input" required />
-    </div>
-    
-    <div class="align-right">
-      <button type="submit" class="button-add">Add user</button>
-    </div>
-    
-  </form>
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" class="my-input" required />
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" class="my-input" required />
+      </div>
+      
+      <div class="align-right">
+        <div class="input-group">
+          <button type="submit" class="button-add">Add user</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  
 
   <script type="module">
 
@@ -53,6 +64,8 @@ const email = user?.user?.email;
       const form = e.target;
       const formData = new FormData(form);
       const payload = Object.fromEntries(formData.entries());
+
+      payload.group = document.querySelector('select[name="group"]').value;
 
       const res = await fetch('/api/auth/add-web-user', {
         method: 'POST',

@@ -1,4 +1,3 @@
-
 import { Cam } from 'onvif';
 import flow from 'nimble';
 
@@ -35,7 +34,7 @@ function generate_range(start_ip, end_ip) {
   return range_array;
 }
 
-export async function scanNetwork({ username = 'admin', password = 'Bkcs@123' } = {}) {
+export async function scanNetwork({ username = 'admin', password = 'Bkcs@123', supabase} = {}) {
   const IP_RANGE_START = '192.168.50.1';
   const IP_RANGE_END = '192.168.50.254';
   const ip_list = generate_range(IP_RANGE_START, IP_RANGE_END);
@@ -46,6 +45,7 @@ export async function scanNetwork({ username = 'admin', password = 'Bkcs@123' } 
   console.error = () => {}; // Suppress error logs
 
   return new Promise((resolve) => {
+
     let remaining = ip_list.length * port_list.length;
 
     ip_list.forEach((ip) => {
@@ -82,8 +82,33 @@ export async function scanNetwork({ username = 'admin', password = 'Bkcs@123' } 
                     }
                   );
                 },
-                function (cb) {
+
+                async function (cb) {
                   results.push(device);
+
+                  if (supabase && device.info) {
+                    const { manufacturer, model, firmwareVersion, serialNumber } = device.info;
+
+                    try {
+                      const insertData = {
+                        ip: device.ip,
+                        port: Number(device.port) || null,
+                        manufacturer: device.info.manufacturer || null,
+                        model: device.info.model || null,
+                        firmware: device.info.firmwareVersion || null,
+                        serial: device.info.serialNumber || null,
+                      };
+
+                      const { error } = await supabase.from('cameras').upsert(insertData, { onConflict: ['ip'] });
+
+                      if (error) {
+                        console.log(`Supabase insert error for IP ${device.ip}:`, error);
+                      }
+                    } catch (e) {
+                      console.log(`Insert failed for ${device.ip}:`, e);
+                    }
+                  }
+
                   cb();
                 },
               ]);
@@ -98,3 +123,4 @@ export async function scanNetwork({ username = 'admin', password = 'Bkcs@123' } 
     });
   });
 }
+

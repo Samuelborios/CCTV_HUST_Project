@@ -7,7 +7,7 @@ body {
     margin: 0 auto;
     width: 100%;
     min-width: 50ch;
-    max-width: 90ch;
+    max-width: 110ch;
     padding: 1rem;
     line-height: 1.5;
 }
@@ -27,16 +27,22 @@ h1 {
 }
 
 .input-line {
+  margin: 0 1rem 0 0;
   display: flex;
   flex-wrap: wrap;
 }
 
 .input-group {
+  margin: 0.5rem 1rem 0 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-wrap: nowrap;
   white-space: nowrap;
+}
+
+.input-group p {
+  margin: 0;
 }
 
 .align-right {
@@ -100,7 +106,7 @@ h1 {
 .outline {
   margin: 0.2rem 0.5rem;
   min-height: 3ch;
-  padding: 0.1rem 1rem;
+  padding: 0.5rem 1rem;
   background-color: #e7eaed;
   outline: 2px solid #a3a3a3;
   color: black;
@@ -114,6 +120,25 @@ h1 {
 
 .outline:hover {
   background-color: #d8dce0;
+}
+
+.active-outline {
+  margin: 0.2rem 0.5rem;
+  min-height: 3ch;
+  padding: 0.1rem 1rem;
+  background-color: #94e476;
+  outline: 2px solid #557c47;
+  color: black;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  font-size: 1.7ch;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.active-outline:hover {
+  background-color: #7fca65;
 }
 
 .login-wrapper {
@@ -247,11 +272,11 @@ h1 {
     display: unset;
 }
 
-@media screen and (min-width: 100ch) {
+@media screen and (min-width: 90ch) {
     .nav-links {
-        margin-left: 5rem;
         display: block;
         position: static;
+        text-align: center;
         width: auto;
         background: none;
     }
