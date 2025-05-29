@@ -1,8 +1,22 @@
 ---
+import { supabase } from "../lib/supabase";
+const { data: user, error: errUser } = await supabase.auth.getUser();
+const { data: bddUser, error: errGroups } = await supabase
+  .from('groups')
+  .select('group')
+  .eq('username', user?.user?.email)
+  .single();
+
+if (errGroups) {
+  console.error("Error fetching group:", errGroups);
+}
+
+const isAdmin = bddUser?.group === 'admin';
 ---
 <div class="nav-links">
     <a href="/dashboard">Home</a>
-    <a href="/webuser_management/">Website users</a>
-    <a href="/user_management/">Camera users</a>
+    {isAdmin && (
+      <a href="/webuser_management/">Website users</a>
+    )}
     <a href="/api/auth/signout/">Sign out</a>
 </div>

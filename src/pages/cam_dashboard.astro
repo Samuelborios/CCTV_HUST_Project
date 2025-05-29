@@ -1,0 +1,154 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { supabase } from "../lib/supabase";
+
+const accessToken = Astro.cookies.get("sb-access-token");
+const refreshToken = Astro.cookies.get("sb-refresh-token");
+
+if (!accessToken || !refreshToken) {
+  return Astro.redirect("/");
+}
+
+// Set Supabase session
+const { data: session, error: sessionError } = await supabase.auth.setSession({
+  refresh_token: refreshToken.value,
+  access_token: accessToken.value,
+});
+
+if (sessionError || !session.session) {
+  Astro.cookies.delete("sb-access-token", { path: "/" });
+  Astro.cookies.delete("sb-refresh-token", { path: "/" });
+  return Astro.redirect("/");
+}
+const url = new URL(Astro.request.url);
+const ip = url.searchParams.get("ip") ?? "Unknown IP";
+---
+
+<BaseLayout>
+  <h1>Camera : <strong>{ip}</strong></h1>
+
+  <h2>Live stream :</h2>
+
+  <video id="video" autoplay muted controls playsinline style="width: 100%; height: auto; margin-bottom: 1rem;"></video>
+
+
+  <div class="align-right">
+    <button id="settings-button" class="outline"> Settings </button>
+  </div>
+
+  <script type="module">
+    document.getElementById("settings-button").addEventListener("click", () => {
+      const params = new URLSearchParams(window.location.search);
+      const ip = params.get("ip");
+      if (ip) {
+        window.location.href = `/user_management?ip=${encodeURIComponent(ip)}`;
+      } else {
+        alert("IP not found in current URL.");
+      }
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const video = document.getElementById("video");
+      if (!(video instanceof HTMLVideoElement)) {
+        console.error("Video element not found or incorrect type");
+        return;
+      }
+  
+      const mse = new MediaSource();
+      video.src = URL.createObjectURL(mse);
+      video.onerror = () => {
+        console.error("Video error:", video.error);
+      };
+  
+      mse.addEventListener("sourceopen", () => {
+        //console.log("MediaSource opened, readyState:", mse.readyState);
+        const mimeCodec = 'video/mp4; codecs="avc1.640033"';
+        
+        if (!MediaSource.isTypeSupported(mimeCodec)) {
+          console.error("Unsupported MIME type or codec:", mimeCodec);
+          return;
+        }
+        
+        const sourceBuffer = mse.addSourceBuffer(mimeCodec);
+        let queue: ArrayBuffer[] = [];
+  
+        const ws = new WebSocket("wss://192.168.50.182/stream/0c82d955-bf64-4934-9a6f-7f72f3061816/channel/0/mse?uuid=0c82d955-bf64-4934-9a6f-7f72f3061816&channel=0");
+        ws.binaryType = "arraybuffer";
+  
+        ws.onmessage = (event) => {
+          //console.log("Incoming data chunk of size:", event.data.byteLength);
+          
+          if (event.data.byteLength < 100) {
+            console.warn("Skipping small chunk of size:", event.data.byteLength);
+            return;
+          }
+          
+          /*
+          if (queue.length === 0 && !sourceBuffer.updating) {
+            console.log("First chunk received:", new Uint8Array(event.data).slice(0, 20));
+          }*/
+  
+          if (sourceBuffer.updating || queue.length > 0) {
+            queue.push(event.data);
+            //console.log("Data added to queue, queue size:", queue.length);
+          } else {
+            try {
+              sourceBuffer.appendBuffer(event.data);
+              //console.log("Appending chunk of size", event.data.byteLength);
+            } catch (e) {
+              console.error("appendBuffer failed", e);
+            }
+          }
+        };
+  
+        sourceBuffer.addEventListener("updateend", () => {
+          //console.log("SourceBuffer updated, queue size:", queue.length);
+  
+          if (queue.length > 0 && !sourceBuffer.updating) {
+            const next = queue.shift();
+            if (next) {
+              try {
+                sourceBuffer.appendBuffer(next);
+                //console.log("Appending next chunk from queue, queue size:", queue.length);
+              } catch (e) {
+                console.error("appendBuffer failed while processing queue", e);
+              }
+            }
+          }
+  
+          if (video.readyState >= 3) { // HAVE_FUTURE_DATA
+            video.play().catch(e => console.warn("Playback error:", e));
+          }
+        });
+  
+        sourceBuffer.addEventListener("error", (e) => {
+          console.error("SourceBuffer error:", e);
+        });
+  
+        ws.onopen = () => console.log("WebSocket connected");
+        ws.onerror = (err) => console.error("WebSocket error:", err);
+        ws.onclose = () => console.log("WebSocket closed");
+  
+        /*
+        video.addEventListener("playing", () => {
+          console.log("Video is playing.");
+        });
+        video.addEventListener("waiting", () => {
+          console.log("Video is waiting for more data.");
+        });
+  
+        setInterval(() => {
+          console.log("Current MediaSource readyState:", mse.readyState);
+          console.log("Video readyState:", video.readyState);
+          if (video.buffered.length > 0) {
+            console.log("Buffered ranges:", video.buffered.start(0), "-", video.buffered.end(0));
+          } else {
+            console.log("No buffered ranges yet.");
+          }
+        }, 1000);*/
+      });
+    });
+  </script>
+</BaseLayout>

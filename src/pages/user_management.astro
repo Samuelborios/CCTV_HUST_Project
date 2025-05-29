@@ -6,7 +6,7 @@ const accessToken = Astro.cookies.get("sb-access-token");
 const refreshToken = Astro.cookies.get("sb-refresh-token");
 
 if (!accessToken || !refreshToken) {
-  return Astro.redirect("/signin");
+  return Astro.redirect("/");
 }
 
 // Set Supabase session
@@ -18,23 +18,24 @@ const { data: session, error: sessionError } = await supabase.auth.setSession({
 if (sessionError || !session.session) {
   Astro.cookies.delete("sb-access-token", { path: "/" });
   Astro.cookies.delete("sb-refresh-token", { path: "/" });
-  return Astro.redirect("/signin");
+  return Astro.redirect("/");
 }
 
 const userEmail = session.session.user?.email ?? "Utilisateur";
+const url = new URL(Astro.request.url);
+const ip = url.searchParams.get("ip") ?? "Unknown IP";
 
 ---
 
 <BaseLayout>
   <h1>Manage Dahua users</h1>
 
-  <h2>Existing users</h2>
+  <h2>Existing users of camera : <strong><label>{ip}</label></strong></h2>
   <ul id="user-list" style="list-style: none; padding-left: 0;"></ul>
 
   <h2>Would you like to add another user ?</h2>
   
   <form id="add-user-form" class="input-line">
-
     <div class="input-group">
       <label>Group</label>
       <select name="group" class="my-select">
@@ -42,25 +43,20 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
         <option value="admin">admin</option>
       </select>
     </div>
-
     <div class="input-group">
       <label for="memo">Memo (optional)</label>
       <input name="memo" class="my-input" />
     </div>
-
     <div class="input-line">
       <div class="input-group">
         <label>Username</label>
         <input name="username" class="my-input" required />
       </div>
-
       <div class="input-group">
         <label>Password</label>
         <input type="password" name="password" class="my-input" required />
       </div>
     </div>
-
-    
     <div class="align-right">
       <div class="input-group">
         <button type="submit" class="button-add">Add user</button>
@@ -68,9 +64,47 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
     </div>
   </form>
 
-  
+
+  <h2>Other settings :</h2>
+
+  <div class="align-right">
+    <button id="reboot-button" class="outline"> Reboot </button>
+  </div>
 
   <script type="module">
+    document.getElementById('reboot-button').addEventListener('click', async () => {
+      const btn = document.getElementById('reboot-button');
+      btn.disabled = true;
+      btn.textContent = 'Rebooting...';
+      
+      const params = new URLSearchParams(window.location.search);
+      const ip = params.get("ip");
+      if (ip) {
+        try {
+          const res = await fetch('/api/reboot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip }),
+          });
+          const data = await res.json();
+
+          if (res.ok) {
+            showToast(data.message || 'Camera rebooted!');
+          } else {
+            showToast(data.error || 'Reboot failed', true);
+          }
+        } catch (err) {
+          showToast('Network error', true);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Reboot';
+        }
+      } else {
+        showToast("IP not found in current URL.");
+        btn.disabled = false;
+        btn.textContent = 'Reboot';
+      }
+    });
 
     function showToast(message, isError = false) {
       const toast = document.getElementById('toast');
@@ -83,19 +117,16 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
       }, 3000);
     }
 
-
     async function fetchUsers() {
       const res = await fetch('/api/list-users');
       const data = await res.json();
 
       const list = document.getElementById('user-list');
       list.innerHTML = '';
-
       if (data.error) {
         list.innerHTML = '<li style="color: red;">Fetching error</li>';
         return;
       }
-
       if (data.users.length === 0) {
         list.innerHTML = '<li>No user found</li>';
         return;
@@ -131,7 +162,12 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
             <p><strong>Group: </strong>${user.group || '-'}</p>
             <p><strong>Memo: </strong>${user.memo || '-'}</p>
             <div class="align-right">
-              <button style=submit class=button-del>Delete</button>
+              <button style=submit class="outline button-modify-pwd">Change password</button>
+            </div>
+          </div>
+          <div class="input-group">
+            <div class="align-right">
+              <button style=submit class=button-del>Delete user</button>
             </div>
           </div>
         `;
@@ -142,7 +178,7 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
           arrow.textContent = isOpen ? '▼' : '▲';
         });
 
-        const deleteBtn = details.querySelector('button');
+        const deleteBtn = details.querySelector('.button-del');
         deleteBtn.addEventListener('click', async (e) => {
           e.stopPropagation(); // prevent toggle
           const confirmed = confirm(`You want to delete the user : "${user.name.trim()}" ?`);
@@ -164,6 +200,13 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
             showToast('Error: '+text, !res.ok);
           }
         });
+
+        const pwdBtn = details.querySelector('.button-modify-pwd');
+        pwdBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openPwdModal(user);
+        });
+
 
         li.appendChild(summary);
         li.appendChild(details);
@@ -194,8 +237,78 @@ const userEmail = session.session.user?.email ?? "Utilisateur";
       }
     });
 
+    function openPwdModal(user) {
+      const modal = document.getElementById('pwd-modal');
+      const form = document.getElementById('pwd-form');
+      form.username.value = user.name;
+      form.oldPwd.value = '';
+      form.newPwd.value = '';
+      modal.style.display = 'flex';
+    }
+
+    document.getElementById('close-pwd-modal').onclick = () => {
+      document.getElementById('pwd-modal').style.display = 'none';
+    };
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('pwd-modal');
+      if (event.target === modal) modal.style.display = 'none';
+    };
+
+    document.getElementById('pwd-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const username = form.username.value.trim();
+      const oldPwd = form.oldPwd.value.trim();
+      const newPwd = form.newPwd.value.trim();
+      if (!username || !oldPwd || !newPwd) {
+        showToast('All fields are required', true);
+        return;
+      }
+      const res = await fetch('/api/modify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: username,
+          pwdOld: oldPwd,
+          pwd: newPwd,
+        }),
+      });
+      const text = await res.text();
+      if (res.ok && text.trim() === 'OK') {
+        showToast('Password changed successfully');
+        document.getElementById('pwd-modal').style.display = 'none';
+      } else {
+        showToast('Error: ' + text, true);
+      }
+    });
+
     // Initial load
     fetchUsers();
   </script>
+
   <div id="toast" class="toast"></div>
+
+  <div id="pwd-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="close-pwd-modal" class="close">&times;</span>
+      <h2>Change Password</h2>
+      <form id="pwd-form" class="input-line">
+        <input type="hidden" name="username" />
+        <div class="input-group">
+          <label>Old Password</label>
+          <input type="password" name="oldPwd" class="my-input" required />
+        </div>
+        <div class="input-group">
+          <label>New Password</label>
+          <input type="password" name="newPwd" class="my-input" required />
+        </div>
+        <div class="input-group">
+          <div class="align-right">
+            <button type="submit" class="button-add">Change Password</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 </BaseLayout>

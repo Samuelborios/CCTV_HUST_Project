@@ -14,8 +14,7 @@ export const POST = async ({ request }) => {
     })
   );
 
-
-    // 🔐 Récupère les tokens depuis les cookies
+  // 🔐 Récupère les tokens depuis les cookies
   const access_token = cookies['sb-access-token'];
   const refresh_token = cookies['sb-refresh-token'];
 

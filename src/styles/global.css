@@ -27,13 +27,20 @@ h1 {
 }
 
 .input-line {
-  margin: 0 1rem 0 0;
+  margin: 0 0 0 0;
   display: flex;
   flex-wrap: wrap;
 }
 
+.form-inline {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0%;
+  gap: 1rem;
+}
+
 .input-group {
-  margin: 0.5rem 1rem 0 0;
+  margin: 0.5rem 0 0 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -106,7 +113,7 @@ h1 {
 .outline {
   margin: 0.2rem 0.5rem;
   min-height: 3ch;
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 1rem;
   background-color: #e7eaed;
   outline: 2px solid #a3a3a3;
   color: black;
@@ -220,6 +227,17 @@ h1 {
 .toast.show {
     opacity: 1;
     pointer-events: auto;
+}
+
+.modal {
+  position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+}
+.modal-content {
+  background: #fff; padding: 2em; border-radius: 8px; min-width: 300px; position: relative;
+}
+.close {
+  position: absolute; right: 1em; top: 1em; font-size: 1.5em; cursor: pointer;
 }
 
 .hamburger {

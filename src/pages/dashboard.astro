@@ -37,20 +37,6 @@ const {data, error} = await supabase.from('cameras').select('*');
 
   <h2>Cameras</h2>
   <ul id="cam-list" style="list-style: none; padding-left: 0;"></ul>
-
-  <!--
-  {error && <p>Error: {error}</p>}
-
-  {test_users ? (
-    test_users.map(({ username, password }) => (
-      <article>
-        <p>User: {username}</p>
-        <p>{password}</p>
-      </article>
-    ))): (
-    <p>Pas de données à afficher.</p>
-    )
-  } -->
   <br>
   <h2>Scan active cameras</h2>
   <form id="scan-form">
@@ -66,19 +52,24 @@ const {data, error} = await supabase.from('cameras').select('*');
       
       <div class="align-right">
         <div class="input-group">
-          <button type="submit" class="outline">Scan Cameras</button>
+          <button id="scan-button" type="submit" class="outline">Scan cameras</button>
         </div>
       </div>
     </div>
-    
-
   </form> 
 
-  <h5 id="output">Results will appear here... </h5> 
-
-
-
   <script type="module">
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.background = isError ? '#c0392b' : '#27ae60';
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
 
     async function fetchCameras(recentScanResults = []) {
       const res = await fetch('/api/list-camDB');
@@ -91,7 +82,6 @@ const {data, error} = await supabase.from('cameras').select('*');
         list.innerHTML = '<li style="color: red;">Fetching error</li>';
         return;
       }
-
       if (!data.cameras || data.cameras.length === 0) {
         list.innerHTML = '<li>No cameras found</li>';
         return;
@@ -113,6 +103,16 @@ const {data, error} = await supabase.from('cameras').select('*');
 
         const status = document.createElement('span');
 
+        const follow = document.createElement('button');
+        follow.textContent = 'Go to'
+        follow.classList.add('active-outline');
+        follow.style.marginLeft = 'auto'; 
+        follow.addEventListener('click', (e) => {
+          e.stopPropagation(); // prevent toggle
+          e.preventDefault();
+          window.location.href = `/cam_dashboard?ip=${encodeURIComponent(camera.ip)}`;
+        });
+
         const ipSpan = document.createElement('test');
         ipSpan.textContent = camera.ip;
         ipSpan.style.padding = '0.15rem 1rem';
@@ -120,15 +120,17 @@ const {data, error} = await supabase.from('cameras').select('*');
         const isActive = recentScanResults.some(scan => scan.ip === camera.ip && scan.info?.serialNumber === camera.serial);
         if (isActive) {
           ipSpan.classList.add('active-outline');
-          status.textContent = 'Connected'
+          status.textContent = 'Connected';
         } else {
           ipSpan.classList.add('outline');
-          status.textContent = 'Previously connected'
+          status.textContent = 'Previously connected';
         }        
 
         summary.appendChild(arrow);
         summary.appendChild(ipSpan);
         summary.appendChild(status);
+
+        if (isActive) summary.appendChild(follow);
 
         const details = document.createElement('div');
         details.style.display = 'none';
@@ -165,9 +167,9 @@ const {data, error} = await supabase.from('cameras').select('*');
       e.preventDefault();
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
-      const output = document.getElementById('output');
+      const scanButton = document.getElementById('scan-button');
 
-      output.textContent = 'Scanning...';
+      scanButton.textContent = 'Scanning...';
 
       try {
         const resScan = await fetch('/api/scan', {
@@ -179,123 +181,16 @@ const {data, error} = await supabase.from('cameras').select('*');
 
         await fetchCameras(data.cameras);
 
-        output.textContent = 'Scan finished OK';
+        scanButton.textContent = 'Scan cameras';
+        showToast('Scan done ✔', false);
         // output.textContent = JSON.stringify(data.cameras, null, 2);
       } catch (err) {
-        output.textContent = 'Error during scan. Check console.';
-        console.log(err);
+        scanButton.textContent = 'Scan cameras';
+        showToast('Error: '+err, true);
       }
     });
 
     fetchCameras();
-  </script>
-
-
-
-<!--   <video id="video" autoplay muted controls playsinline style="width: 100%; height: auto;"></video> -->
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const video = document.getElementById("video");
-      if (!(video instanceof HTMLVideoElement)) {
-        console.error("Video element not found or incorrect type");
-        return;
-      }
-  
-      const mse = new MediaSource();
-      video.src = URL.createObjectURL(mse);
-      video.onerror = () => {
-        console.error("Video error:", video.error);
-      };
-  
-      mse.addEventListener("sourceopen", () => {
-        //console.log("MediaSource opened, readyState:", mse.readyState);
-        const mimeCodec = 'video/mp4; codecs="avc1.640033"';
-        
-        if (!MediaSource.isTypeSupported(mimeCodec)) {
-          console.error("Unsupported MIME type or codec:", mimeCodec);
-          return;
-        }
-        
-        const sourceBuffer = mse.addSourceBuffer(mimeCodec);
-        let queue: ArrayBuffer[] = [];
-  
-        const ws = new WebSocket("wss://192.168.50.182/stream/0c82d955-bf64-4934-9a6f-7f72f3061816/channel/0/mse?uuid=0c82d955-bf64-4934-9a6f-7f72f3061816&channel=0");
-        ws.binaryType = "arraybuffer";
-  
-        ws.onmessage = (event) => {
-          //console.log("Incoming data chunk of size:", event.data.byteLength);
-          
-          if (event.data.byteLength < 100) {
-            console.warn("Skipping small chunk of size:", event.data.byteLength);
-            return;
-          }
-          
-          /*
-          if (queue.length === 0 && !sourceBuffer.updating) {
-            console.log("First chunk received:", new Uint8Array(event.data).slice(0, 20));
-          }*/
-  
-          if (sourceBuffer.updating || queue.length > 0) {
-            queue.push(event.data);
-            //console.log("Data added to queue, queue size:", queue.length);
-          } else {
-            try {
-              sourceBuffer.appendBuffer(event.data);
-              //console.log("Appending chunk of size", event.data.byteLength);
-            } catch (e) {
-              console.error("appendBuffer failed", e);
-            }
-          }
-        };
-  
-        sourceBuffer.addEventListener("updateend", () => {
-          //console.log("SourceBuffer updated, queue size:", queue.length);
-  
-          if (queue.length > 0 && !sourceBuffer.updating) {
-            const next = queue.shift();
-            if (next) {
-              try {
-                sourceBuffer.appendBuffer(next);
-                //console.log("Appending next chunk from queue, queue size:", queue.length);
-              } catch (e) {
-                console.error("appendBuffer failed while processing queue", e);
-              }
-            }
-          }
-  
-          if (video.readyState >= 3) { // HAVE_FUTURE_DATA
-            video.play().catch(e => console.warn("Playback error:", e));
-          }
-        });
-  
-        sourceBuffer.addEventListener("error", (e) => {
-          console.error("SourceBuffer error:", e);
-        });
-  
-        ws.onopen = () => console.log("WebSocket connected");
-        ws.onerror = (err) => console.error("WebSocket error:", err);
-        ws.onclose = () => console.log("WebSocket closed");
-  
-        /*
-        video.addEventListener("playing", () => {
-          console.log("Video is playing.");
-        });
-        video.addEventListener("waiting", () => {
-          console.log("Video is waiting for more data.");
-        });
-  
-        setInterval(() => {
-          console.log("Current MediaSource readyState:", mse.readyState);
-          console.log("Video readyState:", video.readyState);
-          if (video.buffered.length > 0) {
-            console.log("Buffered ranges:", video.buffered.start(0), "-", video.buffered.end(0));
-          } else {
-            console.log("No buffered ranges yet.");
-          }
-        }, 1000);*/
-      });
-    });
   </script>
   
   <!--  
@@ -306,4 +201,5 @@ const {data, error} = await supabase.from('cameras').select('*');
   <iframe src="https://player.twitch.tv/?channel=amawswe&enableExtensions=true&muted=true&parent=samuelborioscctvsite.netlify.app&player=popout&quality=auto" width="640" height="660" frameborder="no" scrolling="no" allowfullscreen="true"></iframe>
   -->
 
+  <div id="toast" class="toast"></div>
 </BaseLayout>
