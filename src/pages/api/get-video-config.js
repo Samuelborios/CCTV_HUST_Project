@@ -10,6 +10,7 @@ export async function POST({ request }) {
   }
 
   return new Promise((resolve) => {
+    const configToken = '00000';
     const camera = new Cam({
       hostname: ip,
       username: 'admin',
@@ -26,22 +27,33 @@ export async function POST({ request }) {
         return;
       }
 
-      camera.systemReboot((err) => {
+      camera.getVideoEncoderConfiguration(configToken, function (err, config) {
         if (err) {
           resolve(
-            new Response(JSON.stringify({ error: 'Reboot failed: ' + err.message }), {
+            new Response(JSON.stringify({ error: 'Failed to get video configuration: ' + err.message }), {
               status: 500,
               headers: { 'Content-Type': 'application/json' }
             })
           );
-        } else {
-          resolve(
-            new Response(JSON.stringify({ message: 'Camera reboot initiated.' }), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' }
-            })
-          );
+          return;
         }
+
+        // Parse and structure the config
+        const parsed = {
+          BitRate: config?.rateControl?.bitrateLimit,
+          Compression: config?.encoding,
+          FPS: config?.rateControl?.frameRateLimit,
+          Width: config?.resolution?.width,
+          Height: config?.resolution?.height,
+          Profile: config?.h264?.profile || config?.h265?.profile, // Depending on encoding
+        };
+
+        resolve(
+          new Response(JSON.stringify(parsed), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          })
+        );
       });
     });
   });

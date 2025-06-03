@@ -9,14 +9,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/db": "^0.14.10",
-    "@astrojs/netlify": "^6.2.5",
-    "@astrojs/react": "^4.2.7",
+    "@astrojs/db": "^0.15.0",
+    "@astrojs/netlify": "^6.3.4",
+    "@astrojs/react": "^4.3.0",
     "@mux/mux-player": "^3.3.4",
     "@supabase/supabase-js": "^2.49.4",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
-    "astro": "^5.5.5",
+    "astro": "^5.8.1",
     "digest-fetch": "^3.1.1",
     "hls.js": "^1.6.2",
     "nimble": "^0.0.2",

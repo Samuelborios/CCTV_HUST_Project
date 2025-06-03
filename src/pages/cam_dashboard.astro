@@ -41,7 +41,7 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
       const params = new URLSearchParams(window.location.search);
       const ip = params.get("ip");
       if (ip) {
-        window.location.href = `/user_management?ip=${encodeURIComponent(ip)}`;
+        window.location.href = `/cam_settings?ip=${encodeURIComponent(ip)}`;
       } else {
         alert("IP not found in current URL.");
       }

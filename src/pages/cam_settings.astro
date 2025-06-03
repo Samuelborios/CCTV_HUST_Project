@@ -21,14 +21,14 @@ if (sessionError || !session.session) {
   return Astro.redirect("/");
 }
 
-const userEmail = session.session.user?.email ?? "Utilisateur";
+//const userEmail = session.session.user?.email ?? "Utilisateur";
 const url = new URL(Astro.request.url);
 const ip = url.searchParams.get("ip") ?? "Unknown IP";
 
 ---
 
 <BaseLayout>
-  <h1>Manage Dahua users</h1>
+  <h1>Camera settings</h1>
 
   <h2>Existing users of camera : <strong><label>{ip}</label></strong></h2>
   <ul id="user-list" style="list-style: none; padding-left: 0;"></ul>
@@ -64,14 +64,149 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
     </div>
   </form>
 
-
   <h2>Other settings :</h2>
+
+  <div id="video-settings">
+    <button id="load-video-config" class="outline">Video Config</button>
+    <form id="video-config-form" style="display:none; margin-top:1em;">
+      <div class="input-group">
+        <label>Bitrate (Kbps)</label>
+        <input type="number" name="BitRate" id="bitrate-input" step="1" required />
+      </div>
+      <div class="input-group">
+        <label>Compression</label>
+        <select name="Compression" id="compression-options"></select>
+      </div>
+      <div class="input-group">
+        <label>FPS</label>
+        <input type="number" name="FPS" id="fps-input" min="0.2" max="30" step="0.1" required />
+      </div>
+      <div class="input-group">
+        <label>Resolution</label>
+        <select name="Resolution" id="resolution-options"></select>
+      </div>
+      <div class="align-right">
+        <button type="submit" class="button-add">Save Video Settings</button>
+      </div>
+    </form>
+  </div>
 
   <div class="align-right">
     <button id="reboot-button" class="outline"> Reboot </button>
   </div>
+  
 
   <script type="module">
+
+    let videoFormVisible = false;
+    let configCaps = null;
+    document.getElementById('load-video-config').onclick = async () => {
+      const form = document.getElementById('video-config-form');
+      videoFormVisible = !videoFormVisible;
+      form.style.display = videoFormVisible ? '' : 'none';
+      if (!videoFormVisible) return;
+
+      const params = new URLSearchParams(window.location.search);
+      const ip = params.get("ip");
+      if (!ip) {
+        showToast("IP not found in URL", true);
+        return;
+      }
+
+      // Fetch config caps if not already loaded
+      if (!configCaps) {
+        const capsRes = await fetch('/api/get-video-config-caps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ip }),
+        });
+        configCaps = await capsRes.json();
+        if (capsRes.ok && !configCaps.error) {
+          populateVideoCaps(configCaps);
+        } else {
+          showToast(configCaps.error || "Failed to load caps", true);
+          return;
+        }
+      }
+
+      // Fetch current config
+      const res = await fetch('/api/get-video-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        showToast(data.error || "Failed to load config", true);
+        return;
+      }
+      // Populate form fields
+      document.getElementById('bitrate-input').value = data.BitRate || '';
+      document.getElementById('compression-options').value = data.Compression || 'H.264';
+      document.getElementById('fps-input').value = data.FPS || '';
+      document.getElementById('resolution-options').value = `${data.Width}x${data.Height}`;
+    };
+
+    function populateVideoCaps(caps) {
+      // Bitrate
+      const bitrateInput = document.getElementById('bitrate-input');
+      bitrateInput.min = caps.BitRateMin || 3;
+      bitrateInput.max = caps.BitRateMax || 10000;
+      bitrateInput.step = 1;
+      // Compression
+      const compSel = document.getElementById('compression-options');
+      compSel.innerHTML = '';
+      (caps.CompressionTypes || ['H.264', 'MJPG']).forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt;
+        o.textContent = opt;
+        compSel.appendChild(o);
+      });
+      // Resolution
+      const resSel = document.getElementById('resolution-options');
+      resSel.innerHTML = ''; 
+      (caps.ResolutionTypes || []).forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.replace(/\s/g, '');
+        o.textContent = opt;
+        resSel.appendChild(o);
+      });
+      // FPS
+      document.getElementById('fps-input').max = caps.FPSMax || 25;
+    }
+
+    // Save handler
+    document.getElementById('video-config-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const params = new URLSearchParams(window.location.search);
+      const ip = params.get("ip");
+      if (!ip) {
+        showToast("IP not found in URL", true);
+        return;
+      }
+      const form = e.target;
+      const [Width, Height] = form.Resolution.value.split('x');
+      const payload = {
+        ip,
+        BitRate: form.BitRate.value,
+        Compression: form.Compression.value,
+        FPS: form.FPS.value,
+        Width,
+        Height,
+      };
+      const res = await fetch('/api/set-video-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok && data.message) {
+        showToast(data.message);
+      } else {
+        showToast(data.error || "Failed to save config", true);
+      }
+    };
+
     document.getElementById('reboot-button').addEventListener('click', async () => {
       const btn = document.getElementById('reboot-button');
       btn.disabled = true;
@@ -163,10 +298,6 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
             <p><strong>Memo: </strong>${user.memo || '-'}</p>
             <div class="align-right">
               <button style=submit class="outline button-modify-pwd">Change password</button>
-            </div>
-          </div>
-          <div class="input-group">
-            <div class="align-right">
               <button style=submit class=button-del>Delete user</button>
             </div>
           </div>
