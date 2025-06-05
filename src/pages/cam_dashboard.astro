@@ -20,6 +20,7 @@ if (sessionError || !session.session) {
   Astro.cookies.delete("sb-refresh-token", { path: "/" });
   return Astro.redirect("/");
 }
+
 const url = new URL(Astro.request.url);
 const ip = url.searchParams.get("ip") ?? "Unknown IP";
 ---
@@ -31,7 +32,6 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
 
   <video id="video" autoplay muted controls playsinline style="width: 100%; height: auto; margin-bottom: 1rem;"></video>
 
-
   <div class="align-right">
     <button id="settings-button" class="outline"> Settings </button>
   </div>
@@ -40,8 +40,9 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
     document.getElementById("settings-button").addEventListener("click", () => {
       const params = new URLSearchParams(window.location.search);
       const ip = params.get("ip");
+      const port = params.get("port");
       if (ip) {
-        window.location.href = `/cam_settings?ip=${encodeURIComponent(ip)}`;
+        window.location.href = `/cam_settings?ip=${encodeURIComponent(ip)}&port=${encodeURIComponent(port)}`;
       } else {
         alert("IP not found in current URL.");
       }

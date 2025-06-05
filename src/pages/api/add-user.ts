@@ -1,10 +1,6 @@
 import type { APIRoute } from 'astro';
 import DigestFetch from 'digest-fetch';
 
-const cameraIP = '192.168.50.99';
-const adminUsername = 'admin';
-const adminPassword = 'Bkcs@123';
-
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
 
@@ -12,6 +8,9 @@ export const POST: APIRoute = async ({ request }) => {
   const userPassword = body.password?.toString() ?? '';
   const userGroup = body.group?.toString() ?? '';
   const userMemo = body.memo?.toString() ?? 'Added via web';
+  const cameraIP = body.ip?.toString();
+  const adminUsername = body.admin_userName?.toString();
+  const adminPassword = body.admin_password?.toString();
 
   if (!userName || !userPassword || !userGroup) {
     return new Response('Missing inputs', { status: 400 });

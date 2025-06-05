@@ -1,6 +1,6 @@
 export async function POST({ request }) {
   const { Cam } = await import('onvif');
-  const { ip } = await request.json();
+  const { ip, port, uname, pwd } = await request.json();
 
   if (!ip || ip === "Unknown IP") {
     return new Response(JSON.stringify({ error: 'No IP provided' }), {
@@ -12,9 +12,9 @@ export async function POST({ request }) {
   return new Promise((resolve) => {
     const camera = new Cam({
       hostname: ip,
-      username: 'admin',
-      password: 'Bkcs@123',
-      port: 80,
+      username: uname,
+      password: pwd,
+      port: port,
     }, function(err) {
       if (err) {
         resolve(

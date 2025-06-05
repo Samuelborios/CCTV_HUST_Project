@@ -34,11 +34,11 @@ function generate_range(start_ip, end_ip) {
   return range_array;
 }
 
-export async function scanNetwork({ username = 'admin', password = 'Bkcs@123', supabase} = {}) {
+export async function scanNetwork({ username, password, supabase} = {}) {
   const IP_RANGE_START = '192.168.50.1';
   const IP_RANGE_END = '192.168.50.254';
   const ip_list = generate_range(IP_RANGE_START, IP_RANGE_END);
-  const port_list = [80, 554, 8080];
+  const port = 80;
 
   const results = [];
 
@@ -46,80 +46,78 @@ export async function scanNetwork({ username = 'admin', password = 'Bkcs@123', s
 
   return new Promise((resolve) => {
 
-    let remaining = ip_list.length * port_list.length;
+    let remaining = ip_list.length;
 
     ip_list.forEach((ip) => {
-      port_list.forEach((port) => {
-        new Cam(
-          {
-            hostname: ip,
-            username,
-            password,
-            port,
-            timeout: 5000,
-          },
-          function CamFunc(err) {
-            if (!err) {
-              const cam_obj = this;
-              const device = {
-                ip,
-                port,
-              };
+      new Cam(
+        {
+          hostname: ip,
+          username,
+          password,
+          port,
+          timeout: 5000,
+        },
+        function CamFunc(err) {
+          if (!err) {
+            const cam_obj = this;
+            const device = {
+              ip,
+              port,
+            };
 
-              flow.series([
-                function (cb) {
-                  cam_obj.getDeviceInformation((err, info) => {
-                    if (!err) device.info = info;
-                    cb();
-                  });
-                },
-                function (cb) {
-                  cam_obj.getStreamUri(
-                    { protocol: 'RTSP', stream: 'RTP-Unicast' },
-                    (err, stream) => {
-                      if (!err) device.rtsp = stream.uri;
-                      cb();
-                    }
-                  );
-                },
-
-                async function (cb) {
-                  results.push(device);
-
-                  if (supabase && device.info) {
-                    const { manufacturer, model, firmwareVersion, serialNumber } = device.info;
-
-                    try {
-                      const insertData = {
-                        ip: device.ip,
-                        port: Number(device.port) || null,
-                        manufacturer: device.info.manufacturer || null,
-                        model: device.info.model || null,
-                        firmware: device.info.firmwareVersion || null,
-                        serial: device.info.serialNumber || null,
-                      };
-
-                      const { error } = await supabase.from('cameras').upsert(insertData, { onConflict: ['ip'] });
-
-                      if (error) {
-                        console.log(`Supabase insert error for IP ${device.ip}:`, error);
-                      }
-                    } catch (e) {
-                      console.log(`Insert failed for ${device.ip}:`, e);
-                    }
-                  }
-
+            flow.series([
+              function (cb) {
+                cam_obj.getDeviceInformation((err, info) => {
+                  if (!err) device.info = info;
                   cb();
-                },
-              ]);
-            }
+                });
+              },
+              function (cb) {
+                cam_obj.getStreamUri(
+                  { protocol: 'RTSP', stream: 'RTP-Unicast' },
+                  (err, stream) => {
+                    if (!err) device.rtsp = stream.uri;
+                    cb();
+                  }
+                );
+              },
 
-            if (--remaining === 0) {
-              resolve(results);
-            }
+              async function (cb) {
+                results.push(device);
+
+                if (supabase && device.info) {
+                  const { manufacturer, model, firmwareVersion, serialNumber } = device.info;
+
+                  try {
+                    const insertData = {
+                      ip: device.ip,
+                      port: Number(device.port) || null,
+                      manufacturer: device.info.manufacturer || null,
+                      model: device.info.model || null,
+                      firmware: device.info.firmwareVersion || null,
+                      serial: device.info.serialNumber || null,
+                    };
+
+                    const { error } = await supabase.from('cameras').upsert(insertData, { onConflict: ['ip'] });
+
+                    if (error) {
+                      console.log(`Supabase insert error for IP ${device.ip}:`, error);
+                    }
+                  } catch (e) {
+                    console.log(`Insert failed for ${device.ip}:`, e);
+                  }
+                }
+
+                cb();
+              },
+            ]);
           }
-        );
-      });
+
+          if (--remaining === 0) {
+            resolve(results);
+          }
+        }
+      );
     });
   });
 }

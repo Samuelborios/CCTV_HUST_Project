@@ -29,7 +29,6 @@ try {
   });
   return Astro.redirect("/");
  }
-const {data, error} = await supabase.from('cameras').select('*');
 ---
 <BaseLayout>
   
@@ -47,7 +46,7 @@ const {data, error} = await supabase.from('cameras').select('*');
       </div>
       <div class="input-group">
         <label>Password</label>
-        <input type="password" id="password" value="Bkcs@123" class="my-input" required>
+        <input type="password" id="password" value="" class="my-input" required>
       </div>
       
       <div class="align-right">
@@ -110,7 +109,7 @@ const {data, error} = await supabase.from('cameras').select('*');
         follow.addEventListener('click', (e) => {
           e.stopPropagation(); // prevent toggle
           e.preventDefault();
-          window.location.href = `/cam_dashboard?ip=${encodeURIComponent(camera.ip)}`;
+          window.location.href = `/cam_dashboard?ip=${encodeURIComponent(camera.ip)}&port=${encodeURIComponent(camera.port)}`;
         });
 
         const ipSpan = document.createElement('test');
@@ -161,7 +160,6 @@ const {data, error} = await supabase.from('cameras').select('*');
       });
     }
 
-    
 
     document.getElementById('scan-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -178,7 +176,6 @@ const {data, error} = await supabase.from('cameras').select('*');
           body: JSON.stringify({ username, password }),
         });
         const data = await resScan.json();
-
         await fetchCameras(data.cameras);
 
         scanButton.textContent = 'Scan cameras';

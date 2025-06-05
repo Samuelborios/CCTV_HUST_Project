@@ -1,10 +1,6 @@
 import type { APIRoute } from 'astro';
 import DigestFetch from 'digest-fetch';
 
-const cameraIP = '192.168.50.99';
-const adminUsername = 'admin';
-const adminPassword = 'Bkcs@123';
-
 type DahuaUser = {
   id?: string;
   name?: string;
@@ -12,11 +8,15 @@ type DahuaUser = {
   memo?: string;
 };
 
-export const GET: APIRoute = async () => {
-  const client = new DigestFetch(adminUsername, adminPassword);
-
+export const POST: APIRoute = async ({request}) => {
   try {
-    const res = await client.fetch(`http://${cameraIP}/cgi-bin/userManager.cgi?action=getUserInfoAll`);
+    const {ip, uname, pwd } = await request.json();
+    if (!uname || !pwd || !ip) {
+      return new Response(JSON.stringify({ error: 'Missing credentials or IP' }), { status: 400 });
+    }
+
+    const client = new DigestFetch(uname,pwd);
+    const res = await client.fetch(`http://${ip}/cgi-bin/userManager.cgi?action=getUserInfoAll`);
     const text = await res.text();
 
     const lines = text.split('\n');

@@ -1,13 +1,12 @@
 import type { APIRoute } from 'astro';
 import DigestFetch from 'digest-fetch';
 
-const cameraIP = '192.168.50.99';
-const adminUsername = 'admin';
-const adminPassword = 'Bkcs@123';
-
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
   const userName = body.userName?.toString();
+  const cameraIP = body.ip?.toString();
+  const adminUsername = body.admin_userName?.toString();
+  const adminPassword = body.pwd?.toString();
 
   if (!userName) {
     return new Response('Missing userName', { status: 400 });
