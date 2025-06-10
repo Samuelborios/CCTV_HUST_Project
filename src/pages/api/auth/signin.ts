@@ -7,7 +7,6 @@ import { URLSearchParams } from "url";
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   // Analyse les données du formulaire
   const body = await request.text();
-  // console.log("Form data received:", body);  
   const params = new URLSearchParams(body);
   
   const email = params.get("email");

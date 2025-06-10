@@ -21,9 +21,10 @@ export const POST: APIRoute = async ({request}) => {
 
     const lines = text.split('\n');
     const userObjects: Record<string, DahuaUser> = {};
+    const regex = /^users\[(\d+)\]\.(\w+)=([\s\S]*)$/;
 
     for (const line of lines) {
-      const match = line.match(/^users\[(\d+)\]\.(\w+)=([\s\S]*)$/);
+      const match = regex.exec(line);
       if (!match) continue;
 
       const [_, index, key, value] = match;
