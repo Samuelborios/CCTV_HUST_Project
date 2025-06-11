@@ -27,7 +27,7 @@ function getLocalSubnetRange() {
     if (!addresses) continue;
 
     for (const net of addresses) {
-      if (net.family === 'IPv4' && !net.internal) {
+      if (net.family === 'IPv4') {
         const parts = net.address.split('.');
         return {
           start: `${parts[0]}.${parts[1]}.${parts[2]}.1`,
@@ -40,7 +40,7 @@ function getLocalSubnetRange() {
   // Fallback if no Wi-Fi interface found
   for (const addresses of Object.values(nets)) {
     for (const net of addresses) {
-      if (net.family === 'IPv4' && !net.internal) {
+      if (net.family === 'IPv4') {
         const parts = net.address.split('.');
         return {
           start: `${parts[0]}.${parts[1]}.${parts[2]}.1`,
