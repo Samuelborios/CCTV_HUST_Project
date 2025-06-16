@@ -373,11 +373,11 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
           e.stopPropagation(); // prevent toggle
           const newPayload = {
             userName: user.name.trim(),
-            ip,
+            ip: ip,
             admin_userName: username.value,
             pwd: password.value
           };
-          const confirmed = confirm(`You want to delete the user : "${user.name.trim()}" ?`);
+          const confirmed = confirm(`You want to delete the user : ${user.name.trim()} ? on the camera ${ip}`);
           if (!confirmed) return;
 
           const res = await fetch('/api/delete-user', {
@@ -393,7 +393,7 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
             showToast(text, !res.ok);
             await fetchUsers(); // Refresh user list
           } else {
-            showToast('Error: '+text, !res.ok);
+            showToast(text, !res.ok);
           }
         });
 
@@ -477,7 +477,7 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
         }),
       });
       const text = await res.text();
-      if (res.ok && text.trim() === 'OK') {
+      if (res.ok) {
         showToast('Password changed successfully');
         document.getElementById('pwd-modal').style.display = 'none';
       } else {
