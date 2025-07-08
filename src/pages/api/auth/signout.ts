@@ -1,4 +1,4 @@
-// Avec `output: 'static'` configuré :
+// with `output: 'static'` configured:
 // export const prerender = false;
 import type { APIRoute } from "astro";
 

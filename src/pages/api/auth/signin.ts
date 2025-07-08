@@ -1,11 +1,10 @@
-// Avec `output: 'static'` configuré :
+// with `output: 'static'` configured:
 // export const prerender = false;
 import type { APIRoute } from "astro";
 import { supabase } from "../../../lib/supabase";
 import { URLSearchParams } from "url";
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
-  // Analyse les données du formulaire
   const body = await request.text();
   const params = new URLSearchParams(body);
   

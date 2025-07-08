@@ -22,7 +22,6 @@ export const POST = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
-  // 🧠 Initialise la session côté serveur
   const { error } = await supabase.auth.setSession({
     access_token,
     refresh_token,

@@ -15,12 +15,11 @@ export const POST: APIRoute = async () => {
   const dockerRunCmd = `docker run --name ${containerName} --restart unless-stopped -v "${process.cwd()}/certs:/config" -p 8083:8083 -p 443:443 -p 5541:5541 ghcr.io/deepch/rtsptoweb:latest`;
 
   try {
-    // Step 1: Stop the container if it's already running
+    // Stop the container if it's already running
     await runCommand(`docker rm -f ${containerName}`).catch(() => {
       console.log(`Container ${containerName} not running or already removed.`);
     });
 
-    // Step 2: Start a new container
     await runCommand(dockerRunCmd);
     
     return new Response(JSON.stringify({ success: true, message: 'Docker restarted successfully ✔' }), {

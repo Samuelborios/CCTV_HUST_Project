@@ -10,11 +10,11 @@ export const POST: APIRoute = async ({request}) => {
   const streamUrl = "rtsp://"+name+":"+pwd+"@192.168.50.99:554";
 
   try {
-    // Step 1: Read and parse the file
+    // Read and parse the existing config file 
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     const json = JSON.parse(fileContent);
 
-    // Step 2: Check if the stream already exists
+    // Check if the stream already exists
     if (json.streams[streamKey]) {
       return new Response(JSON.stringify({ success: false, message: 'Stream already exists' }), {
         status: 200,
@@ -22,7 +22,7 @@ export const POST: APIRoute = async ({request}) => {
       });
     }
 
-    // Step 3: Add new stream
+    // Add new stream
     json.streams[streamKey] = {
       channels: {
         "0": {
@@ -33,7 +33,6 @@ export const POST: APIRoute = async ({request}) => {
       name: streamKey
     };
 
-    // Step 4: Write back the file
     fs.writeFileSync(filePath, JSON.stringify(json, null, 2));
 
     return new Response(JSON.stringify({ success: true }), {

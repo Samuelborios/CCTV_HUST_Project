@@ -55,7 +55,7 @@ function getLocalSubnetRange() {
 
 function handleCamera(ip, username, password, port, supabase, results, done) {
   const camera = new Cam({ hostname: ip, username, password, port, timeout: 5000 }, function (err) {
-    if (err) return done(); // Skip this IP
+    if (err) return done();
 
     const device = { ip, port };
 
