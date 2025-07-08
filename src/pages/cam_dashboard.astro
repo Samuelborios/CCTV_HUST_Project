@@ -30,13 +30,56 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
 
   <h2>Live stream :</h2>
 
+  <div>
+    <button id="add-stream-button" class="outline">New camera ? Add it to the stream list</button>
+    <form id="add-stream-form" style="display:none">
+      <div class="input-line">
+        <div class="input-group">
+          <label>Username</label>
+          <input type="text" id="username" value="admin" class="my-input" required>
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="password" value="" class="my-input" required>
+        </div>
+        
+        <div class="align-right">
+          <div class="input-group">
+            <button id="add-button" type="submit" class="button-add">Add stream</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  
+  <br/>
+
   <video id="video" autoplay muted controls playsinline style="width: 100%; height: auto; margin-bottom: 1rem;"></video>
 
   <div class="align-right">
     <button id="settings-button" class="outline"> Settings </button>
   </div>
+  <div class="align-right">
+    <button id="test-button" class="outline">test</button>
+  </div>
+  <div class="align-right">
+    <button id="restart-docker-button" class="outline">Restart stream server</button>
+  </div>
 
   <script type="module">
+
+    document.getElementById("restart-docker-button").addEventListener("click", async () => {
+      const res = await fetch('/api/restart-stream-server', {
+        method: 'POST'
+      });
+      const result = await res.json();
+      if (result.success) {
+        showToast(result.message);
+      }
+      setTimeout(() => {location.reload();}, 2000);
+    });
+
     document.getElementById("settings-button").addEventListener("click", () => {
       const params = new URLSearchParams(window.location.search);
       const ip = params.get("ip");
@@ -47,6 +90,47 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
         alert("IP not found in current URL.");
       }
     });
+
+    document.getElementById("test-button").addEventListener("click", () => {
+      setTimeout(() => {location.reload();}, 3000);
+    });
+
+    let streamFormVisible = false;
+    document.getElementById('add-stream-button').onclick = async () => {
+      const form = document.getElementById('add-stream-form');
+      streamFormVisible = !streamFormVisible;
+      form.style.display = streamFormVisible ? '' : 'none';
+      if (!streamFormVisible) return;
+    };
+
+    document.getElementById('add-stream-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const res = await fetch('/api/add-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: username.value,
+          pwd: password.value
+        }),
+      });
+      const result = await res.json();
+      if (res.ok && result.message) {
+        showToast('ok'+result.message);
+      } else {
+        showToast('notok'+result.error || "Failed to save config", true);
+      }
+    };
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.background = isError ? '#c0392b' : '#27ae60';
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
   </script>
 
   <script>
@@ -64,7 +148,6 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
       };
   
       mse.addEventListener("sourceopen", () => {
-        //console.log("MediaSource opened, readyState:", mse.readyState);
         const mimeCodec = 'video/mp4; codecs="avc1.640033"';
         
         if (!MediaSource.isTypeSupported(mimeCodec)) {
@@ -74,30 +157,30 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
         
         const sourceBuffer = mse.addSourceBuffer(mimeCodec);
         let queue: ArrayBuffer[] = [];
+
+        const params = new URLSearchParams(window.location.search);
+        const ip = params.get("ip");
+          let stream_name = "";
+        if (ip) {
+          stream_name = "stream"+ip;
+        } else {
+          alert("IP not found in current URL.");
+        }
+        let url = "wss://192.168.50.182/stream/"+stream_name+"/channel/0/mse?uuid="+stream_name+"&channel=0"
   
-        const ws = new WebSocket("wss://192.168.50.182/stream/0c82d955-bf64-4934-9a6f-7f72f3061816/channel/0/mse?uuid=0c82d955-bf64-4934-9a6f-7f72f3061816&channel=0");
+        const ws = new WebSocket(url);
         ws.binaryType = "arraybuffer";
   
         ws.onmessage = (event) => {
-          //console.log("Incoming data chunk of size:", event.data.byteLength);
-          
           if (event.data.byteLength < 100) {
             console.warn("Skipping small chunk of size:", event.data.byteLength);
             return;
           }
-          
-          /*
-          if (queue.length === 0 && !sourceBuffer.updating) {
-            console.log("First chunk received:", new Uint8Array(event.data).slice(0, 20));
-          }*/
-  
           if (sourceBuffer.updating || queue.length > 0) {
             queue.push(event.data);
-            //console.log("Data added to queue, queue size:", queue.length);
           } else {
             try {
               sourceBuffer.appendBuffer(event.data);
-              //console.log("Appending chunk of size", event.data.byteLength);
             } catch (e) {
               console.error("appendBuffer failed", e);
             }
@@ -105,21 +188,18 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
         };
   
         sourceBuffer.addEventListener("updateend", () => {
-          //console.log("SourceBuffer updated, queue size:", queue.length);
-  
           if (queue.length > 0 && !sourceBuffer.updating) {
             const next = queue.shift();
             if (next) {
               try {
                 sourceBuffer.appendBuffer(next);
-                //console.log("Appending next chunk from queue, queue size:", queue.length);
               } catch (e) {
                 console.error("appendBuffer failed while processing queue", e);
               }
             }
           }
   
-          if (video.readyState >= 3) { // HAVE_FUTURE_DATA
+          if (video.readyState >= 3) {
             video.play().catch(e => console.warn("Playback error:", e));
           }
         });
@@ -131,25 +211,8 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
         ws.onopen = () => console.log("WebSocket connected");
         ws.onerror = (err) => console.error("WebSocket error:", err);
         ws.onclose = () => console.log("WebSocket closed");
-  
-        /*
-        video.addEventListener("playing", () => {
-          console.log("Video is playing.");
-        });
-        video.addEventListener("waiting", () => {
-          console.log("Video is waiting for more data.");
-        });
-  
-        setInterval(() => {
-          console.log("Current MediaSource readyState:", mse.readyState);
-          console.log("Video readyState:", video.readyState);
-          if (video.buffered.length > 0) {
-            console.log("Buffered ranges:", video.buffered.start(0), "-", video.buffered.end(0));
-          } else {
-            console.log("No buffered ranges yet.");
-          }
-        }, 1000);*/
       });
     });
   </script>
+  <div id="toast" class="toast"></div>
 </BaseLayout>
