@@ -55,13 +55,10 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
   
   <br/>
 
-  <video id="video" autoplay muted controls playsinline style="width: 100%; height: auto; margin-bottom: 1rem;"></video>
+  <video id="video" autoplay muted controls playsinline style="width: 100%; height: 12rem; margin-bottom: 1rem;"></video>
 
   <div class="align-right">
     <button id="settings-button" class="outline"> Settings </button>
-  </div>
-  <div class="align-right">
-    <button id="test-button" class="outline">test</button>
   </div>
   <div class="align-right">
     <button id="restart-docker-button" class="outline">Restart stream server</button>
@@ -89,10 +86,6 @@ const ip = url.searchParams.get("ip") ?? "Unknown IP";
       } else {
         alert("IP not found in current URL.");
       }
-    });
-
-    document.getElementById("test-button").addEventListener("click", () => {
-      setTimeout(() => {location.reload();}, 3000);
     });
 
     let streamFormVisible = false;
